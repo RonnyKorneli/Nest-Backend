@@ -1,5 +1,5 @@
-## Here you can follow our Final Project. The Project is still very much a work in Progress.
-## We organize our workflow by creating tickets in the Jira software.
+#### Here you can follow our Final Project. The Project is still very much a work in Progress.
+#### We organize our workflow by creating tickets in the Jira software.
 
 # Nest-Backend
 
