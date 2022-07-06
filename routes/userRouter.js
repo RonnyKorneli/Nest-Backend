@@ -16,6 +16,7 @@ const userRouter = express.Router();
 userRouter
     .post("/login", async (req,res)=>{
 
+        console.log("req.body.loginInfo ++++++++++++++++++++++++++++", req.body)
         const user = await User.login(req.body)
         if (user) {
             /////// TOKEN ..........................
@@ -35,22 +36,31 @@ userRouter
     .post("/register", 
         userValidators, 
         async (req,res,next) => {
-            console.log("inside register ", req.body)
+            
             try{ 
 
-            const errors = validationResult(req.body.loginInfo)
-            if (!errors.isEmpty()) {
-                return res.status(400).send({
-                    errors: errors.array().map(e => e.msg)
-                })
-            }
-                // const password = req.headers.password
-                //req.body.password = password
-                const user = await User.register(req.body)
+                const errors = validationResult(req.body.loginInfo)
+                if (!errors.isEmpty()) {
+                    return res.status(400).send({
+                        errors: errors.array().map(e => e.msg)
+                    })
+                }
 
-                return res.send(user)
-            
-            } catch (err) {
+                    const user = await User.register(req.body)
+                    if (user) {
+                        /////// TOKEN ..........................
+                        const payload = { 
+                            userId: user._id 
+                        }
+                        const options ={
+                                expiresIn: "30m"
+                        }
+                        const token = jwt.sign(payload,process.env.SECRET,options)
+                        return res.send({ ...user.toJSON(), token}).status({ Login: 'sucess!!' })
+                    }
+
+
+                } catch (err) {
                 next(createError(400, err.message)) 
             }
         }
@@ -70,8 +80,9 @@ userRouter
     })
 
     .patch("/:id", checkToken, async (req, res, next)=>{
+        console.log("thisis req body" + req.body.address)
         try {
-            const queryOptions = { new: true, runValidators: true }
+            const queryOptions = { new: true, runValidators: true}
             const id = req.params.id
 
             const query = User.findByIdAndUpdate(id, req.body, queryOptions)
@@ -79,13 +90,13 @@ userRouter
             query.populate("reviews")
             //query.populate("conversations")
             
-            const question = await query.exec()
+            const user = await query.exec()
 
-            if (!question) {
-                return next(createError(404, "Question not found"))
+            if (!user) {
+                return next(createError(404, "User not found"))
             }
 
-            res.send(question)
+            res.send(user)
         } catch (error) {
             next(createError(400, error.message))
         }
